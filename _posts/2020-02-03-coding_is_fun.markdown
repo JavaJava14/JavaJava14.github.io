@@ -1,6 +1,6 @@
 ---
 layout: post
-title:      "Why I decided to learn software development."
+title:      "Why I decided to learn software engineering."
 date:       2020-02-03 23:47:33 -0500
 permalink:  coding_is_fun
 ---
