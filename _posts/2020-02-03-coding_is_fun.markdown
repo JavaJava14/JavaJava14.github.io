@@ -1,7 +1,7 @@
 ---
 layout: post
-title:      "Coding is fun"
-date:       2020-02-04 04:47:32 +0000
+title:      "Why I decided to learn software development."
+date:       2020-02-03 23:47:33 -0500
 permalink:  coding_is_fun
 ---
 
