@@ -1,11 +1,11 @@
 # Site settings
 author: Jose Chavira
-title: 
+title: Going back to code
 header-img: img/home-bg.png
 email: joeychavira2016@gmail.com
 copyright_name: Jose Chavira
 description: > # this means to ignore newlines until "baseurl:"
-  
+  Refresh the mind
 baseurl: "" # the subpath of your site, e.g. /blog
 twitter_username: 
 github_username:  JavaJava14
