@@ -167,4 +167,4 @@ end
 
 What was important for me to be able to develop a fucntional application was utilizing every piece of knowledge and tools I've learned. Also making sure I planned out what I wanted for my project. I did struggle with certain aspects of this project but I kept trying out new methods to get the program running. Everytime something didn't work it only lead to me new ideas and I was able to keep learning. This project was fun to play around with and I can't wait for future projects. 
 
-That's it for the walkthrough and I hope you got to learn something new. Thank you1
+That's it for the walkthrough and I hope you got to learn something new. Thank you
