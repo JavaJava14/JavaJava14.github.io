@@ -1,7 +1,8 @@
 ---
+layout: post
 title: "Featuring Dekstop processors"
 date:
-permalink: 
+permalink: newegg_cpu_cli_walkthrough
 ---
 
 
