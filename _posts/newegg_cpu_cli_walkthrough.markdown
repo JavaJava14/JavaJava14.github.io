@@ -80,6 +80,26 @@ end
 
 This is where I use HTTParty to grab the raw html file and then parse it with Nokogiri to make it a readable format. I go and start iterating over the featured items on the page I provided. It grabs the name, price and url. Then I called the initialized method in cpu.rb. 
 
+```
+class NeweggCpu::Scraper
+
+  def self.get_cpu
+    x = 0
+    url = "https://www.newegg.com/p/pl?Submit=ENE&IsNodeId=1&N=100007671%2050001028&cm_sp=Cat_CPU-Processors_2-_-Visnav-_-AMD-CPU_2"
+    unparsed = HTTParty.get(url) #Raw HTML
+    parsed = Nokogiri::HTML(unparsed) #Readable format
+    processors_list = parsed.css('div.item-container')#36 items
+    processors_list.each do |processor| #Iterate over 36 items
+      name = processor.css("a.item-title").text
+      price = processor.css('li.price-current').text
+      url = processor.css('a')[0].attributes["href"].value 
+      puts "#{x+=1}. " << name
+      NeweggCpu::Cpu.new(name,price,url)#calls initialize method 
+    end
+  end
+end
+```
+
 ### NEWEGG_CPU/lib/cli.rb
 
 After I'm done with the scraper class I add the ability for the user to interact with application. It starts off greeting the user and then giving them the option to search to generate a list of featured items or to exit out the program. It will ask for their input to select which item they like to know more about. If the input did not meet requirements then it will go ahead and ask for the input again. 
