@@ -31,11 +31,15 @@ require_relative './newegg_cpu/scraper'
 ```
 
 ### NEWEGG_CPU/bin/run
-Then I want to be able to see if I can execute my program through my run file by calling a method from another class. I do so by creating a call method then adding a message for the user by adding greet method to call. 
-### NEWEGG_CPU/lib/cli.rb
+
 ```
 NeweggCpu::CLI.new.call
 ```
+
+Then I want to be able to see if I can execute my program through my run file by calling a method from another class. I do so by creating a call method then adding a message for the user by adding greet method to call. 
+
+### NEWEGG_CPU/lib/cli.rb
+
 ```
 def call
     greet
@@ -47,4 +51,27 @@ def call
     puts "\nWelcome"
     puts ""
   end
+```
+
+### NEWEGG_CPU/lib/newegg_cpu/cpu.rb
+
+This is where I add my attributes which will let the program know what info is linked to the dekstop proccesors.I provided the name, price and url. 
+
+```
+class NeweggCpu::Cpu
+
+    attr_accessor :name, :price, :url
+
+    @@all = []
+  
+    def initialize(name,price,url)
+      @name = name
+      @price = price
+      @url = url
+      @@all << self
+    end 
+    def self.all 
+      @@all
+    end
+end
 ```
