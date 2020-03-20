@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Featuring Dekstop processors"
-date:
+date: 2020-03-20 13:28:30 -0500
 permalink: newegg_cpu_cli_walkthrough
 ---
 
