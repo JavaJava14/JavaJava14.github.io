@@ -11,22 +11,14 @@ The reason I had made VG_Judge which is an application that allows the user to r
 
 Ill go ahead and guide you through the steps I went through developing my project. First I setup my database. 
 
-
 ### VG_Judge/db/migrate
-
 ```
-class CreateUsers < ActiveRecord::Migration[6.0]
-  def change
     create_table :users do |t|
       t.string :username
       t.string :password_digest
     end
-  end
-end
 ```
 ```
-class CreateGames < ActiveRecord::Migration[6.0]
-  def change
     create_table :games do |t|
       t.string :title
       t.string :developer
@@ -34,65 +26,66 @@ class CreateGames < ActiveRecord::Migration[6.0]
       t.integer :user_id
       t.integer :review_id
     end
-  end
-end
 ```
-```
-class CreateReviews < ActiveRecord::Migration[6.0]
-  def change
-    create_table :reviews do |t|
-      t.string :summary
-      t.text :opinion
-      t.integer :rating
-    end
-  end
-end
-```
-```
-class CreateGenres < ActiveRecord::Migration[6.0]
-  def change
-    create_table :genres do |t|
-      t.string :name
-      t.integer :game_id
-    end
-  end
-end
-```
-These are the migration files where you create the tables with columns. 
+For this project I went ahead and created the users, games, reviews and genres table in order to complete the requirements shown in the next section in my models. 
+### VG_Judge/app/models
 
+These set of models include at least one has_many, at least one belongs_to, and at least two has_many :through relationships. It also includes a many-to-many relationship implemented with has_many :through associations. The join tabe includes a user-submittable attribute. These models also include reasonable validations such as presence, uniqueness and numericality. Scope method is also used to retrieve and query objects. It returns all games found in the database where game title matches text field input that the user creates and adds to params for title.
+```
+class Game < ActiveRecord::Base
+  belongs_to :user
+  belongs_to :review
+  ...
+  scope :search_by_title, -> (search_title){where("title = ?", search_title)}
+end
+```
+```
+class User < ActiveRecord::Base
+  has_many :games
+  has_many :reviews, through: :games
+  validates :username, :password, presence: true
+  validates_uniqueness_of :username
+  has_secure_password
+end
+```
+```
+class Review < ApplicationRecord
+  has_many :users, through: :games
+  validates_numericality_of :rating, :greater_than_or_equal_to => 1, :less_than_or_equal_to =>10
+end
+```
 ### VG_Judge/config/routes.rb
-
-Nested resources with the appropriate RESTful URLs are used.
+ 
+Nested resources with the appropriate RESTful URLs are used. It makes it easier to generate paths and URLs which avoids hardcoded strings in views. 
 ```
-Rails.application.routes.draw do
-  # For details on the DSL available within this file, see https://guides.rubyonrails.org/routing.html
-  root "application#index"
-
   resources :users
   resources :games
   resources :reviews
-  resources :sessions, only: [:new]
+  resources :sessions
 
   resources :users do
     resources :games
   end
- 
-  get '/sessions', to: 'sessions#new'
-  post '/sessions', to: 'sessions#create'
-  get '/logout/:id', to: 'sessions#destroy'
-  delete '/logout/:id', to: 'sessions#destroy', as: 'logout'
-  get '/auth/:provider/callback', to: 'sessions#omniauth'
-  get '/most_user', to: "users#most_users", as: 'most_users'
+
 end
 ```
-
+### VG_Judge/app/views/layouts/application.html.erb
+This set of code represents a `new` nested route
+```
+<li class = "navbar_newgr"><%= link_to("New Game Review", new_user_game_path(current_user), :class => 'a-bar') %></li>
+```
+### VG_Judge/app/views/games/index.erb
+This set of code represents a `index` nested route
+```
+<% @games.each do |game| %>
+<td><%= link_to game.user.username, user_games_path(game.user) %></td>
+```
 ### VG_Judge/app/controllers
 
 These are the generated controllers which include the application, users, sessions and games controllers where the CRUD is available. 
-
+### Controllers/application_controller.rb
+In my ApplicationController I wrote my helper methods to ensure that the user is logged in to their account. 
 ```
-class ApplicationController < ActionController::Base
-  protect_from_forgery with: :exception
   helper_method :current_user
   helper_method :logged_in?
 
@@ -112,25 +105,13 @@ class ApplicationController < ActionController::Base
   end
 end
 ```
+### controllers/games_controller.rb
+I made use of a before filter in both users and games controller which requires the user to be logged in before the action can run. In order to DRY my code I also added another before filter to find the id of game. I also achieved DRY code by using methods from has_many association such as the build metho which returns one or more new objects of the collection type that have been instantiated with attributes and liked to this object through a foreign key, but have not yet been saved. 
+### https://apidock.com/rails/ActiveRecord/Associations/ClassMethods/has_many
 ```
-class GamesController < ApplicationController
-  before_action :current_user
+  before_action :find_game, only: [:show, :edit, :destroy]
+  before_action :require_login
   
-  def index
-    if params[:user_id]
-      @games = User.find(params[:user_id]).games
-    elsif params[:title]
-      @games = Game.search_by_title(params[:title])
-    else
-      @games = Game.all
-    end
-  end 
-
-  def new
-    @game = Game.new
-    @game.build_review
-  end
-
   def create
     @genres = Genre.all
     @game = current_user.games.build(game_params) 
@@ -140,70 +121,25 @@ class GamesController < ApplicationController
       render :new
     end
   end
-
-  def show
-    @game = Game.find(params[:id])
-  end
-
-  def edit
-    @game = Game.find(params[:id])
-  end
-  
-  def update
-    @game = Game.find(params[:id])
-    if @game.update(game_params)
-      redirect_to game_path(@game)
-    else
-      render :edit
-    end
-  end
-
-  def destroy
-    @game = Game.find(params[:id])
-    @game.destroy
-    redirect_to user_path(current_user)
-  end
-
-  private
-
-  def game_params
-    params.require(:game).permit(:title, :developer, :year, :genre_ids, review_attributes: [:summary, :opinion, :rating])
-  end
-  
 end
 ```
+### controllers/sessions_controller.rb
+In our sessions controller the user is able to login locally or via github.
+Using bcrypt in my application allowed it be less vunerable. Using methods such as authenticate from has_secure_password in the user model made it easier to return the user instance if the password was correct. It makes sure the user is who they say they are. The user is also able to logout successfully which is done by deleting the session. 
 ```
-class SessionsController < ApplicationController
-
-  def new
-    if !current_user
-      @user = User.new
-    else
-      redirect_to user_path(current_user)
-    end
-  end
-
   def create
-    @user = User.find_by(username: params[:username])
-    if @user && @user.authenticate(params[:password])
-      session[:user_id] = @user.id
-      redirect_to user_path(@user)
-    else
-      flash[:alert] = "Your login credentials were incorrect. Please try again."
-      redirect_to sessions_path(@user)
-    end
-  end
+    if auth
+      @user = User.find_or_create_by(uid: auth['uid']) do |u|
+        u.username = auth['info']['name']
+        u.password = SecureRandom.hex
+      ...
+      @user = User.find_by(username: params[:username])
+      if @user && @user.authenticate(params[:password])
+      ...
 
   def destroy 
     session.delete :user_id
     redirect_to root_path
-  end
-
-  def omniauth
-    @user = User.from_omniauth(auth)
-    @user.save
-    session[:user_id] = @user.id
-    redirect_to user_path(@user)
   end
 
   private
@@ -213,20 +149,11 @@ class SessionsController < ApplicationController
   end
 
 end
+``` 
+### controllers/users_controller.rb
+Users controller is where new user object is instantiated and sets key :user_id in the session hash and stores the user's id in it. I use the permit and require method here and also in my other controllers which helped me set the parameter as permitted and limit which attributes should be allowed for mass updating. The require method helps makes sure that a specific parameter is present. 
+### https://api.rubyonrails.org/classes/ActionController/Parameters.html
 ```
-```
-class UsersController <  ApplicationController
-  before_action :current_user, only: [:show]
-  before_action :require_login, only: [:show]
-
-  def new
-    if !current_user
-      @user = User.new
-    else
-      redirect_to user_path(current_user)
-    end
-  end
-
   def create
     @user = User.new(user_params)
     if @user.save
@@ -237,13 +164,7 @@ class UsersController <  ApplicationController
     end
   end
 
-  def show
-    @game = Game.all
-  end
-
-  def most_users
-    @users = User.joins(:games).group(:id).order('COUNT(games.id) DESC').limit(1)
-  end
+  ...
 
   private
 
@@ -253,56 +174,9 @@ class UsersController <  ApplicationController
 
 end
 ```
-### VG_Judge/app/models
-
-This set of code is part of the models. These set of models include at least one has_many, at least one belongs_to, and at least two has_many :through relationships. It also includes a many-to-many relationship implemented with has_many :through associations. 
+### views/users/new.erb
+The form_for here allows us to create a form which the user creates the attributes for the user model object. This form also displays validation errors in use of a partial.  
 ```
-class Game < ActiveRecord::Base
-  belongs_to :user
-  belongs_to :review
-  has_many :genres
-  accepts_nested_attributes_for :review
-  validates :title, :developer, :year, :genre_ids, presence: true
-  scope :search_by_title, -> (search_title){where("title = ?", search_title)}
-end
-```
-```
-class User < ActiveRecord::Base
-  has_many :games
-  has_many :reviews, through: :games
-  validates :username, :password, presence: true
-  validates_uniqueness_of :username
-  has_secure_password
-end
-```
-```
-class Session < ActiveRecord:Base
-  validates :username, presence: true
-  validates :password, presence: true
-end
-```
-```
-class Review < ApplicationRecord
-  has_many :games
-  has_many :users, through: :games
-  validates :rating, :summary, :opinion, presence: true
-  validates_numericality_of :rating, :greater_than_or_equal_to => 1, :less_than_or_equal_to =>10
-end
-```
-```
-class Genre < ApplicationRecord
-	belongs_to :game, optional: true
-end
-```
-
-### VG_Judge/app/views
-
-The User new form has built in validation errors.Uses partials to display errors. 
-
-```
-<div class = "register">
-<h1>CREATE AN ACCOUNT</h1>
-</div>
   <%= form_for @user, controller: 'users', action: 'create' do |f| %>
   <div class = "fields_with_errors"><%= render 'login_error'%></div>
   <div>
@@ -314,14 +188,16 @@ The User new form has built in validation errors.Uses partials to display errors
      <li>
       <%= f.label :password, :class => "label_signup2" %>
       <%= f.text_field :password, :class => "field_signup2" %>
-     </li>
-    </ul>
-      <%= f.submit "Sign Up", :class => 'submit_signup' %>
-  </div>
-  <% end %>
-</div>
+    ...
 ```
-
+### views/users/_login_error.erb
+```
+  <% if @user.errors.any? %>
+    <% @user.errors.full_messages.each do |msg| %>
+      <li><%= msg %></li>
+    <% end %>
+  <% end %>
+```
 ### Going foward
 
-I was able to grab my previous experience with the Sinatra project and use it here. There are many other features that I wanted to include but I made sure that I met the requirements and not go overboard. I very much enjoyed learning new methods, html and css. I can't wait to expand my knowledge on future projects. That's it for the walkthrough and I hope you got to learn something new. Thank you
+I was able to grab my previous experience with the Sinatra project and use it here. There are many other features that I wanted to include but I made sure that I met the requirements and not go overboard. I did have trouble working with has_many :through association but I eventually went through trial and error to get results. I very much enjoyed learning new methods, html and css. I can't wait to expand my knowledge on future projects. That's it for the walkthrough and I hope you got to learn something new. Thank you
