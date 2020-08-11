@@ -107,6 +107,7 @@ end
 ```
 ### controllers/games_controller.rb
 I made use of a before filter in both users and games controller which requires the user to be logged in before the action can run. In order to DRY my code I also added another before filter to find the id of game. I also achieved DRY code by using methods from has_many association such as the build metho which returns one or more new objects of the collection type that have been instantiated with attributes and liked to this object through a foreign key, but have not yet been saved. 
+https://dev.to/levi/authentication-and-authorization-a-la-rails-bcrypt-1kn0#:~:text=bcrypt%20handles%20validating%20password%20and,if%20the%20password%20is%20correct.
 ### https://apidock.com/rails/ActiveRecord/Associations/ClassMethods/has_many
 ```
   before_action :find_game, only: [:show, :edit, :destroy]
