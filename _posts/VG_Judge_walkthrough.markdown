@@ -107,7 +107,6 @@ end
 ```
 ### controllers/games_controller.rb
 I made use of a before filter in both users and games controller which requires the user to be logged in before the action can run. In order to DRY my code I also added another before filter to find the id of game. I also achieved DRY code by using methods from has_many association such as the build metho which returns one or more new objects of the collection type that have been instantiated with attributes and liked to this object through a foreign key, but have not yet been saved. 
-https://dev.to/levi/authentication-and-authorization-a-la-rails-bcrypt-1kn0#:~:text=bcrypt%20handles%20validating%20password%20and,if%20the%20password%20is%20correct.
 ### https://apidock.com/rails/ActiveRecord/Associations/ClassMethods/has_many
 ```
   before_action :find_game, only: [:show, :edit, :destroy]
@@ -126,6 +125,7 @@ end
 ```
 ### The use of Bcrypt and authentication method
 Using bcrypt in my application allowed it be less vunerable. Bcrypt handles validating password and password_confirmation and converts password into the password_digest which is in the user table. Using methods such as authenticate from has_secure_password in the user model made it possible to return true if the password is correct from the password string. It makes sure the user is who they say they are.
+###https://dev.to/levi/authentication-and-authorization-a-la-rails-bcrypt-1kn0#:~:text=bcrypt%20handles%20validating%20password%20and,if%20the%20password%20is%20correct.
 ### controllers/sessions_controller.rb
 In our sessions controller the user is able to login locally or via github. The user is able to logout successfully which is done by deleting the session. 
 ```
